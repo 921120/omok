@@ -29,7 +29,7 @@ main(){
 	while(1){ //continue game
 		resetMap();
 		if(MSC == 11){
-			mvaddstr(10,30,"¤±¤¤¤·¤©");
+			mvaddstr(10,30,"Opponent's turn!!                 ");
 			refresh();
 			receiveXY(&ex, &ey, socket);	
 			map_mirror[ey][ex] = ESC;
@@ -42,7 +42,7 @@ main(){
 			q2 = 1;q3 = 1;
 			x=14;y=7;
 			clearbottom();
-			mvaddstr(10,30,"game start!!   ");
+			mvaddstr(10,30,"my turn!!                         ");
 			print(x,y,MSC);//set game
 			while(q2){ //put stone
 				condition=1;
@@ -90,7 +90,7 @@ main(){
 					//my turn
 					key = put(x,y,MSC);
 					if(!key){
-						mvaddstr(15,0,"my turn.");
+						mvaddstr(15,0,"there's already stone there.              ");
 						move(y,x);
 						break;
 					}
@@ -112,14 +112,14 @@ main(){
 					} //draw
 					refresh();
 					if(!q){
-						mvaddstr(16,0,"Restart?(Y/N)                     ");
+						mvaddstr(16,0,"Restart?(Y/N)                       ");
 						refresh();
 						while(q3){
 							key = getch();
 							switch(key){
 							case 'Y':case 'y':
 								sendXY(1,1,socket);
-								mvaddstr(15,0,"wait for opponent                 ");
+								mvaddstr(15,0,"wait for Opponent's input                 ");
 								refresh();
 								receiveXY(&x,&y,socket);
 								if(x&&y){
@@ -129,9 +129,9 @@ main(){
 									q3 = 0;
 								}
 								else if(S){
-									close(socket);
 									clear();
-									mvaddstr(0,0,"reset score.          ");
+									close(socket);
+									mvaddstr(0,0,"game over.                            ");
 									win = 0; lose = 0;
 									refresh();
 									socket = acceptt();
@@ -140,7 +140,7 @@ main(){
 								}
 								else{
 									clear();
-									mvaddstr(0,0,"game over.                ");
+									mvaddstr(0,0,"game over.                       ");
 									refresh();
 									getch();
 									clear();
@@ -152,7 +152,6 @@ main(){
 								break;
 							case 'N':case 'n':
 								sendXY(0,0,socket);
-								close(socket);
 								clear();
 								endwin();
 								close(socket);
@@ -171,8 +170,8 @@ main(){
 					key = put(ex,ey,ESC);
 					map_mirror[ey][ex]=ESC;
 					print(ex,ey, map_mirror[ey][ex]);
-					if(key == 6){
-						mvaddstr(15,0,"Draw!!                     ");
+					if(key == 6){ 
+						mvaddstr(15,0,"Draw!!                           ");
 						print_stat();
 						q = 0;
 					} //draw
@@ -191,7 +190,7 @@ main(){
 							switch(key){
 							case 'Y':case 'y':
 								sendXY(1,1,socket);
-								mvaddstr(15,0,"restart the game.        ");
+								mvaddstr(15,0,"wait for Opponent's input                ");
 								refresh();
 								receiveXY(&x,&y,socket);
 								if(x&&y){
@@ -201,9 +200,9 @@ main(){
 									q3 = 0;
 								}
 								else if(S){
-									close(socket);
 									clear();
-									mvaddstr(0,0,"reset score.           ");
+									close(socket);
+									mvaddstr(0,0,"reset score.                  ");
 									refresh();
 									win = 0; lose = 0;
 									socket = acceptt();
@@ -211,7 +210,7 @@ main(){
 									q3 = 0;
 								}
 								else{
-									mvaddstr(0,0,"game over.              ");
+									mvaddstr(0,0,"game over.                     ");
 									refresh();
 									getch();
 									clear();
@@ -222,7 +221,6 @@ main(){
 								break;
 							case 'N':case 'n':
 								sendXY(0,0,socket);
-								close(socket);
 								clear();
 								endwin();
 								close(socket);
@@ -243,12 +241,12 @@ main(){
 
 void printbottom(int a){
 	switch(a){
-	case 3:
-		mvaddstr(15,0,"what's here?                           ");
+	case 3: 
+		mvaddstr(15,0,"what's here?                                    ");
 		break;
 	case 4:
-		mvaddstr(15,0,"33 not allowed.                           ");
-		break;
+		mvaddstr(15,0,"33 not allowed.                                ");
+		break; 
 	case 5:
 		mvaddstr(15,0,"44 not allowed.                                ");
 		break;
@@ -700,8 +698,8 @@ void start(){
 			clear();
 			move(0,0);
 			printw("1.If you put 5 stones in line, you win.\n");
-			printw("2. White stones are 33, 44 not allowed.\n");
-			printw("3.White stones are 33, 44 allowed.\n");
+			printw("2.first player is not allowd 33, 44\n");
+			printw("3.second player is allowd 33, 44\n");
 			getch();
 			break;		
 		case '3':
