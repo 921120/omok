@@ -119,7 +119,7 @@ main(){
 							switch(key){
 							case 'Y':case 'y':
 								sendXY(1,1,socket);
-								mvaddstr(15,0,"?ë????‘ë‹µ??ê¸°ë‹¤ë¦¬ëŠ”ì¤?           ");
+								mvaddstr(15,0,"wait for opponent                 ");
 								refresh();
 								receiveXY(&x,&y,socket);
 								if(x&&y){
