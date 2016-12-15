@@ -9,9 +9,11 @@ int serv_sock;
 struct sockaddr_in serv_addr;
 struct sockaddr_in clnt_addr;
 int clnt_addr_size;
+
 int connect_server(int port, char* ipaddr){
 	int socket1;
 	int ret;
+	}
 	struct sockaddr_in staddr;
 	if((socket1 = socket(PF_INET, SOCK_STREAM,0)) ==-1){
 		perror("socket()");
@@ -47,7 +49,6 @@ int open_server(int port){
 		perror("socket open error");
 		exit(1);
 	}
-	
 
 	memset(&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -57,7 +58,7 @@ int open_server(int port){
 	on = 1;
 	setsockopt(serv_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
 	if(bind(serv_sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1){
-		perror("bind error : ");
+		perror("\nbind error : ");
 		return -1;
 	}
 
@@ -68,7 +69,7 @@ int open_server(int port){
 }
 
 void sendXY(int x, int y, int clnt_sock){
-	char t1[100], t2[100];
+	char t1[3], t2[3];
 	sprintf(t1, "%d", x);
 	sprintf(t2, "%d", y);
 	write(clnt_sock, t1, sizeof(t1));
@@ -76,7 +77,7 @@ void sendXY(int x, int y, int clnt_sock){
 }
 
 void receiveXY(int *x, int *y, int clnt_sock){
-	char t1[100], t2[100];
+	char t1[3], t2[3];
 	int str_len;
 
 	str_len = read(clnt_sock, t1, sizeof(t1));
@@ -93,4 +94,3 @@ void receiveXY(int *x, int *y, int clnt_sock){
 void close_sock(int clnt_sock){
 	close(clnt_sock);
 }
-
