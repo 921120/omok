@@ -68,7 +68,7 @@ int open_server(int port){
 }
 
 void sendXY(int x, int y, int clnt_sock){
-	char t1[3], t2[3];
+	char t1[100], t2[100];
 	sprintf(t1, "%d", x);
 	sprintf(t2, "%d", y);
 	write(clnt_sock, t1, sizeof(t1));
@@ -76,7 +76,7 @@ void sendXY(int x, int y, int clnt_sock){
 }
 
 void receiveXY(int *x, int *y, int clnt_sock){
-	char t1[3], t2[3];
+	char t1[100], t2[100];
 	int str_len;
 
 	str_len = read(clnt_sock, t1, sizeof(t1));
