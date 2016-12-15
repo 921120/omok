@@ -16,7 +16,7 @@ int mystone, opponentstone;
 int win, lose;
 char map_mirror3[3][5];
 char map_mirror4[8][17];
-char map_mirror[15][29];
+char map_mirror5[15][29];
 int gamecheck = 0;
 int socketcheck = 1;
 int backtomenu = 0;
@@ -28,6 +28,7 @@ main(){
 	int socket;
 	pthread_t t1;
 	void *flickering(void *);
+	pthread_create(&t1, NULL, flickering, NULL);
 
 	while(1){
 		fflush(stdin);
@@ -38,6 +39,7 @@ main(){
 			socketcheck = 0;
 			start();
 			socket=setSocket();
+			set_up();
 		}
 		for(i=0; i<3; i++){
 			for(j=0; j<5; j++){
@@ -51,12 +53,10 @@ main(){
 		}
 		for(i=0; i<15; i++){
 			for(j=0; j<29; j++){
-				map[i][j] = 0;
+				map5[i][j] = 0;
 			}
 		}
 
-		set_up();
-		pthread_create(&t1, NULL, flickering, NULL);
 		if (gamecheck == 3){
 			while(1){ //continue game
 				if(backtomenu)
@@ -168,6 +168,7 @@ main(){
 											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
 											refresh();
+											endwin();
 											q3 = 0;
 											backtomenu = 1;
 											break;
@@ -177,6 +178,7 @@ main(){
 											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
 											refresh();
+											endwin();
 											q3 = 0;
 											backtomenu = 1;
 											break;
@@ -190,6 +192,7 @@ main(){
 										}
 										clear();
 										refresh();
+										endwin();
 										q3 = 0;
 										backtomenu = 1;
 										break;
@@ -243,6 +246,7 @@ main(){
 											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
 											refresh();
+											endwin();
 											q3 = 0;
 											backtomenu = 1;
 											break;
@@ -252,6 +256,7 @@ main(){
 											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
 											refresh();
+											endwin();
 											q3 = 0;
 											backtomenu = 1;
 											break;
@@ -264,6 +269,7 @@ main(){
 											close(socket);
 										clear();
 										refresh();
+										endwin();
 										q3 = 0;
 										backtomenu = 1;
 										break;
@@ -394,6 +400,7 @@ main(){
 											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
 											refresh();
+											endwin();
 											q3 = 0;
 											backtomenu = 1;
 											break;
@@ -403,6 +410,7 @@ main(){
 											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
 											refresh();
+											endwin();
 											q3 = 0;
 											backtomenu = 1;
 											break;
@@ -416,6 +424,7 @@ main(){
 										}
 										clear();
 										refresh();
+										endwin();
 										q3 = 0;
 										backtomenu = 1;
 										break;
@@ -469,6 +478,7 @@ main(){
 											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
 											refresh();
+											endwin();
 											q3 = 0;
 											backtomenu = 1;
 											break;
@@ -478,6 +488,7 @@ main(){
 											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
 											refresh();
+											endwin();
 											q3 = 0;
 											backtomenu = 1;
 											break;
@@ -489,6 +500,7 @@ main(){
 										if(S)
 											close(socket);
 										refresh();
+										endwin();
 										q3 = 0;
 										backtomenu = 1;
 										break;
@@ -517,7 +529,7 @@ main(){
 					mvaddstr(10,30,"Opponent's turn!!                 ");
 					refresh();
 					receiveXY(&ex, &ey, socket);
-					map_mirror[ey][ex] = opponentstone;
+					map_mirror5[ey][ex] = opponentstone;
 					print(ex,ey,opponentstone);
 				}//receive first if stone color white
 				q = 1;
@@ -538,7 +550,7 @@ main(){
 						case KEY_UP:
 							if(y-1>=0){
 								state = 0;
-								print(x,y, map_mirror[y][x]);
+								print(x,y, map_mirror5[y][x]);
 								y--;
 								print(x,y,mystone);
 								state = 1;
@@ -547,7 +559,7 @@ main(){
 						case KEY_DOWN:
 							if(y+1<=14){
 								state = 0;
-								print(x,y, map_mirror[y][x]);
+								print(x,y, map_mirror5[y][x]);
 								y++;
 								print(x,y,mystone);
 								state = 1;
@@ -556,7 +568,7 @@ main(){
 						case KEY_LEFT:
 							if(x-2>=0){
 								state = 0;
-								print(x,y, map_mirror[y][x]);
+								print(x,y, map_mirror5[y][x]);
 								x-=2;
 								print(x,y,mystone);
 								state = 1;
@@ -565,7 +577,7 @@ main(){
 						case KEY_RIGHT:
 							if(x+2<=29){
 								state = 0;
-								print(x,y, map_mirror[y][x]);
+								print(x,y, map_mirror5[y][x]);
 								x+=2;
 								print(x,y,mystone);
 								state = 1;
@@ -573,7 +585,7 @@ main(){
 							break;
 						case '\n':case KEY_ENTER:
 							//my turn
-							key = put(x,y,mystone);
+							key = put5(x,y,mystone);
 							if(!key){
 								mvaddstr(15,0,"there's already stone there.              ");
 								move(y,x);
@@ -619,6 +631,7 @@ main(){
 											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
 											refresh();
+											endwin();
 											q3 = 0;
 											backtomenu = 1;
 											break;
@@ -628,6 +641,7 @@ main(){
 											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
 											refresh();
+											endwin();
 											q3 = 0;
 											backtomenu = 1;
 											break;
@@ -641,6 +655,7 @@ main(){
 										}
 										clear();
 										refresh();
+										endwin();
 										q3 = 0;
 										backtomenu = 1;
 										break;
@@ -655,9 +670,9 @@ main(){
 							clearbottom();
 							refresh();
 							receiveXY(&ex, &ey, socket);
-							key = put(ex,ey,opponentstone);
-							map_mirror[ey][ex]=opponentstone;
-							print(ex,ey, map_mirror[ey][ex]);
+							key = put5(ex,ey,opponentstone);
+							map_mirror5[ey][ex]=opponentstone;
+							print(ex,ey, map_mirror5[ey][ex]);
 							}
 							if(key == 6){ 
 								mvaddstr(15,0,"Draw!!                           ");
@@ -694,6 +709,7 @@ main(){
 											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
 											refresh();
+											endwin();
 											q3 = 0;
 											backtomenu = 1;
 											break;
@@ -703,6 +719,7 @@ main(){
 											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
 											refresh();
+											endwin();
 											q3 = 0;
 											backtomenu = 1;
 											break;
@@ -716,6 +733,7 @@ main(){
 										}
 										clear();
 										refresh();
+										endwin();
 										q3 = 0;
 										backtomenu = 1;
 										break;
@@ -779,10 +797,10 @@ void *flickering(void * a){
 			else{
 				print(x,y,mystone);
 				usleep(TIME);
-				print(x,y,map_mirror[y][x]);
+				print(x,y,map_mirror5[y][x]);
 				usleep(TIME);
 				if(!state){
-					print(x,y, map_mirror[y][x]);
+					print(x,y, map_mirror5[y][x]);
 				}
 			}
 
@@ -829,7 +847,7 @@ void resetMap(){
 	else{
 		for(i=0; i<15; i++){
 			for(j=0; j<29; j++){
-				map_mirror[i][j] = map[i][j];
+				map_mirror5[i][j] = map5[i][j];
 			}
 		}
 		for(i=0; i<15; i++){
@@ -974,7 +992,7 @@ int isVictory4( char mystonec){
 	return 0;
 }
 
-int isVictory( char mystonec ){
+int isVictory5( char mystonec ){
 	int dx[] ={1, 0, 1,-1};
 	int dy[] = {0, 1, 1,1};
 	int i,x1,y1,d;
@@ -989,7 +1007,7 @@ int isVictory( char mystonec ){
 				for(i=0 ; i<5; i++){
 					tx = x1 + dx[d] * i*2;
 					ty =  y1 + dy[d] * i;
-					if(  map_mirror[ty][tx] != mystonec ) 
+					if(  map_mirror5[ty][tx] != mystonec ) 
 						break;
 					if( ty>15||tx>31) 
 						break;
@@ -1009,8 +1027,8 @@ int six(int xx, int yy, char mystonec) {
 	int ty;
 	int temp;
 	const int NOD = 4;
-	temp = map_mirror[yy][xx];
-	map_mirror[yy][xx] = mystonec;
+	temp = map_mirror5[yy][xx];
+	map_mirror5[yy][xx] = mystonec;
 
 	if (mystonec == 10) {
 		for (d = 0; d < NOD; d++) {
@@ -1019,12 +1037,12 @@ int six(int xx, int yy, char mystonec) {
 					for (i = 0; i < 10; i++) {
 						tx = x + dx[d] * i * 2;
 						ty = y + dy[d] * i;
-						if (map_mirror[ty][tx] != mystonec)
+						if (map_mirror5[ty][tx] != mystonec)
 							break;
 						if (ty > 14 || tx > 29)
 							break;
 						if (i == 5) {
-							map_mirror[yy][xx] = temp;
+							map_mirror5[yy][xx] = temp;
 							return 1;
 						}
 					}
@@ -1032,7 +1050,7 @@ int six(int xx, int yy, char mystonec) {
 			}
 		}
 	}
-	map_mirror[yy][xx] = temp;
+	map_mirror5[yy][xx] = temp;
 	return 0;
 }
 int threethree(int xx, int yy, char mystonec)
@@ -1050,7 +1068,7 @@ int threethree(int xx, int yy, char mystonec)
 				if (k == 0){
 					if (yy - i < 0){
 						i--;
-						if (map_mirror[yy - i][xx] != 10 && map_mirror[yy - i][xx] != 11){
+						if (map_mirror5[yy - i][xx] != 10 && map_mirror5[yy - i][xx] != 11){
 							i++;
 							break;
 						}
@@ -1058,12 +1076,12 @@ int threethree(int xx, int yy, char mystonec)
 						cc++;
 						break;
 					}
-					tempMap = map_mirror[yy - i][xx];
+					tempMap = map_mirror5[yy - i][xx];
 				}
 				else if (k == 1){ 
 					if (yy - i < 0 || xx + i * 2 > 28){
 						i--;
-						if (map_mirror[yy - i][xx + i * 2] != 10 && map_mirror[yy - i][xx + i * 2] != 11){
+						if (map_mirror5[yy - i][xx + i * 2] != 10 && map_mirror5[yy - i][xx + i * 2] != 11){
 							i++;
 							break;
 						}
@@ -1071,12 +1089,12 @@ int threethree(int xx, int yy, char mystonec)
 						cc++;
 						break;
 					}
-					tempMap = map_mirror[yy - i][xx + i * 2];
+					tempMap = map_mirror5[yy - i][xx + i * 2];
 				}
 				else if (k == 2){
 					if (xx + i * 2 > 28){
 						i--;
-						if (map_mirror[yy][xx + i * 2] != 10 && map_mirror[yy][xx + i * 2] != 11){
+						if (map_mirror5[yy][xx + i * 2] != 10 && map_mirror5[yy][xx + i * 2] != 11){
 							i++;
 							break;
 						}
@@ -1084,12 +1102,12 @@ int threethree(int xx, int yy, char mystonec)
 						cc++;
 						break;
 					}
-					tempMap = map_mirror[yy][xx + i * 2];
+					tempMap = map_mirror5[yy][xx + i * 2];
 				}
 				else if (k == 3){ 
 					if (yy + i > 14 || xx + i * 2 > 28){
 						i--;
-						if (map_mirror[yy + i][xx + i * 2] != 10 && map_mirror[yy + i][xx + i * 2] != 11){
+						if (map_mirror5[yy + i][xx + i * 2] != 10 && map_mirror5[yy + i][xx + i * 2] != 11){
 							i++;
 							break;
 						}
@@ -1097,12 +1115,12 @@ int threethree(int xx, int yy, char mystonec)
 						cc++;
 						break;
 					}
-					tempMap = map_mirror[yy + i][xx + i * 2];
+					tempMap = map_mirror5[yy + i][xx + i * 2];
 				}
 				else if (k == 4){
 					if (yy + i > 14){
 						i--;
-						if (map_mirror[yy + i][xx] != 10 && map_mirror[yy + i][xx] != 11){
+						if (map_mirror5[yy + i][xx] != 10 && map_mirror5[yy + i][xx] != 11){
 							i++;
 							break;
 						}
@@ -1110,11 +1128,11 @@ int threethree(int xx, int yy, char mystonec)
 						cc++;
 						break;
 					}
-					tempMap = map_mirror[yy + i][xx];
+					tempMap = map_mirror5[yy + i][xx];
 				}
 				else if (k == 5){ 					if (yy + i > 14 || xx - i * 2 < 0){
 					i--;
-					if (map_mirror[yy + i][xx - i * 2] != 10 && map_mirror[yy + i][xx - i * 2] != 11){
+					if (map_mirror5[yy + i][xx - i * 2] != 10 && map_mirror5[yy + i][xx - i * 2] != 11){
 						i++;
 						break;
 					}
@@ -1122,12 +1140,12 @@ int threethree(int xx, int yy, char mystonec)
 					cc++;
 					break;
 				}
-				tempMap = map_mirror[yy + i][xx - i * 2];
+				tempMap = map_mirror5[yy + i][xx - i * 2];
 				}
 				else if (k == 6){
 					if (xx - i * 2 < 0){
 						i--;
-						if (map_mirror[yy][xx - i * 2] != 10 && map_mirror[yy][xx - i * 2] != 11){
+						if (map_mirror5[yy][xx - i * 2] != 10 && map_mirror5[yy][xx - i * 2] != 11){
 							i++;
 							break;
 						}
@@ -1135,12 +1153,12 @@ int threethree(int xx, int yy, char mystonec)
 						cc++;
 						break;
 					}
-					tempMap = map_mirror[yy][xx - i * 2];
+					tempMap = map_mirror5[yy][xx - i * 2];
 				}
 				else if (k == 7){ 
 					if (yy - i < 0 || xx - i * 2 < 0){
 						i--;
-						if (map_mirror[yy - i][xx - i * 2] != 10 && map_mirror[yy - i][xx - i * 2] != 11){
+						if (map_mirror5[yy - i][xx - i * 2] != 10 && map_mirror5[yy - i][xx - i * 2] != 11){
 							i++;
 							break;
 						}
@@ -1148,7 +1166,7 @@ int threethree(int xx, int yy, char mystonec)
 						cc++;
 						break;
 					}
-					tempMap = map_mirror[yy - i][xx - i * 2];
+					tempMap = map_mirror5[yy - i][xx - i * 2];
 				}
 
 				if (mystonec == tempMap){
@@ -1211,11 +1229,11 @@ int isDraw4() {
 	return 1; //draw.
 }
 
-int isDraw() {
+int isDraw5() {
 	int  x1, y1;
 	for (x1 = 0; x1 < 29; x1 += 2) {
 		for (y1 = 0; y1 < 15; y1++) {
-			if (map_mirror[y1][x1] == 10 || map_mirror[y1][x1] == 11);
+			if (map_mirror5[y1][x1] == 10 || map_mirror5[y1][x1] == 11);
 			else	return 0;
 		}
 	}
@@ -1286,10 +1304,10 @@ int put4(int xx,int yy,char mystonec){
 	return 1; //continue game
 }
 
-int put(int xx,int yy,char mystonec){
+int put5(int xx,int yy,char mystonec){
 	int End, ban, i, j;
 	char temp;
-	if( map_mirror[yy][xx]==10 || map_mirror[yy][xx] == 11)	//stone exist at xy
+	if( map_mirror5[yy][xx]==10 || map_mirror5[yy][xx] == 11)	//stone exist at xy
 		return 0;
 
 	ban=six(xx,yy,mystonec);
@@ -1297,18 +1315,18 @@ int put(int xx,int yy,char mystonec){
 		return 3; //if black, lose
 
 	if (mystonec == 10){
-		temp = map_mirror[yy][xx];
-		map_mirror[yy][xx] = mystonec;
+		temp = map_mirror5[yy][xx];
+		map_mirror5[yy][xx] = mystonec;
 		for (i = 0; i < 29; i = i + 2){
 			for (j = 0; j < 15; j++){
-				if (mystonec == map_mirror[j][i]){
+				if (mystonec == map_mirror5[j][i]){
 					ban = threethree(i, j, mystonec);
 					if (ban == 1){
-						map_mirror[yy][xx] = temp;
+						map_mirror5[yy][xx] = temp;
 						return 4;//33 rule
 					}
 					if (ban == 2){
-						map_mirror[yy][xx] = temp;
+						map_mirror5[yy][xx] = temp;
 						return 5;//44 rule
 					}
 				}
@@ -1316,14 +1334,14 @@ int put(int xx,int yy,char mystonec){
 		}
 	}
 
-	map_mirror[yy][xx] = mystonec;
+	map_mirror5[yy][xx] = mystonec;
 	state = 0;
-	print(xx,yy, map_mirror[yy][xx]);
-	End = isVictory(mystonec);
+	print(xx,yy, map_mirror5[yy][xx]);
+	End = isVictory5(mystonec);
 
 	if(End)
 		return 2; //victory or lose
-	End = isDraw();
+	End = isDraw5();
 	if (End)
 		return 6; //draw
 
@@ -1498,10 +1516,10 @@ void start(){
 			break;
 		case '2':
 			clear();
-			mvaddstr(20,0,"                                    1. Sammok Introduce           ");
-			mvaddstr(21,0,"                                    2. Samok Introduce            ");
-			mvaddstr(22,0,"                                    3. Omok Introduce             ");
-			mvaddstr(23,0,"                                    else. go back.                ");
+			mvaddstr(20,0,"                                    1. Sammok Introduce(3-mok)           ");
+			mvaddstr(21,0,"                                    2. Samok Introduce (4-mok)           ");
+			mvaddstr(22,0,"                                    3. Omok Introduce  (5-mok)           ");
+			mvaddstr(23,0,"                                           else. go back.                ");
 			k = getch();
 			switch(k){
 			case '1' :
@@ -1518,7 +1536,7 @@ void start(){
 				mvaddstr(21,0,"                     2.Stones must piled on the stone.");
 				mvaddstr(22,0,"                     3.If all the spaces are filled with stones, Draw.");
 
-				mvaddstr(25,0,"                                      PRESS ANY KEY.                  ");
+				mvaddstr(24,0,"                                      PRESS ANY KEY.                  ");
 				getch();
 				break;
 			case '3' :
