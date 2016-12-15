@@ -163,10 +163,9 @@ main(){
 											q3 = 0;
 										}
 										else if(S){
-											close(socket);
 											clear();
-											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
+											close(socket);
 											refresh();
 											endwin();
 											q3 = 0;
@@ -175,9 +174,7 @@ main(){
 										}
 										else{
 											clear();
-											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
-											refresh();
 											endwin();
 											q3 = 0;
 											backtomenu = 1;
@@ -241,10 +238,9 @@ main(){
 											q3 = 0;
 										}
 										else if(S){
-											close(socket);
 											clear();
-											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
+											close(socket);
 											refresh();
 											endwin();
 											q3 = 0;
@@ -253,7 +249,6 @@ main(){
 										}
 										else{
 											clear();
-											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
 											refresh();
 											endwin();
@@ -265,8 +260,10 @@ main(){
 									case 'N':case 'n':
 										sendXY(0,0,socket);
 										sleep(2);
-										if(S)
+										clear();
+										if(S){
 											close(socket);
+										}
 										clear();
 										refresh();
 										endwin();
@@ -395,10 +392,9 @@ main(){
 											q3 = 0;
 										}
 										else if(S){
-											close(socket);
 											clear();
-											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
+											close(socket);
 											refresh();
 											endwin();
 											q3 = 0;
@@ -407,9 +403,7 @@ main(){
 										}
 										else{
 											clear();
-											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
-											refresh();
 											endwin();
 											q3 = 0;
 											backtomenu = 1;
@@ -419,6 +413,7 @@ main(){
 									case 'N':case 'n':
 										sendXY(0,0,socket);
 										sleep(2);
+										clear();
 										if(S){
 											close(socket);
 										}
@@ -473,22 +468,17 @@ main(){
 											q3 = 0;
 										}
 										else if(S){
-											close(socket);
 											clear();
-											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
+											close(socket);
 											refresh();
-											endwin();
 											q3 = 0;
 											backtomenu = 1;
 											break;
 										}
 										else{
 											clear();
-											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
-											refresh();
-											endwin();
 											q3 = 0;
 											backtomenu = 1;
 											break;
@@ -497,10 +487,12 @@ main(){
 									case 'N':case 'n':
 										sendXY(0,0,socket);
 										sleep(2);
-										if(S)
+										clear();
+										if(S){
 											close(socket);
+										}
+										clear();
 										refresh();
-										endwin();
 										q3 = 0;
 										backtomenu = 1;
 										break;
@@ -626,10 +618,9 @@ main(){
 											q3 = 0;
 										}
 										else if(S){
-											close(socket);
 											clear();
-											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
+											close(socket);
 											refresh();
 											endwin();
 											q3 = 0;
@@ -638,7 +629,6 @@ main(){
 										}
 										else{
 											clear();
-											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
 											refresh();
 											endwin();
@@ -650,6 +640,7 @@ main(){
 									case 'N':case 'n':
 										sendXY(0,0,socket);
 										sleep(2);
+										clear();
 										if(S){
 											close(socket);
 										}
@@ -704,10 +695,9 @@ main(){
 											q3 = 0;
 										}
 										else if(S){
-											close(socket);
 											clear();
-											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
+											close(socket);
 											refresh();
 											endwin();
 											q3 = 0;
@@ -716,10 +706,7 @@ main(){
 										}
 										else{
 											clear();
-											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
 											sleep(2);
-											refresh();
-											endwin();
 											q3 = 0;
 											backtomenu = 1;
 											break;
@@ -728,6 +715,7 @@ main(){
 									case 'N':case 'n':
 										sendXY(0,0,socket);
 										sleep(2);
+										clear();
 										if(S){
 											close(socket);
 										}
@@ -1358,58 +1346,98 @@ void set_up(){
 
 int setSocket(){
 	int q=1, i, j;
+	int clientgame, nullpoint, nullpoint2;
 	char ipaddr[20];
 	char temp[10];
 	while(1){
 		clear();
-		mvaddstr(0,0,"1. create room");
-		mvaddstr(1,0,"2. join room");
-		mvaddstr(2,0,"3. go back");
+		if(gamecheck == 3)
+			mvaddstr(15,0,"                                        you select 3-mok!            ");
+		else if(gamecheck == 4)
+			mvaddstr(15,0,"                                        you select 4-mok!            ");
+		else
+			mvaddstr(15,0,"                                        you select 5-mok!            ");
+		mvaddstr(16,0,"                                        1. create room            ");
+		mvaddstr(17,0,"                                        2. join room              ");
+		mvaddstr(18,0,"                                        3. go back                ");
 		i = getch();
 		switch(i){
 		case '1':
-			clear();
-			echo();
-			mvaddstr(0,0,"Port: ");
-			refresh();
-			getstr(temp);
-			port = atoi(temp);
-			clear();
-			mvaddstr(0,0,"wait for another player");
-			move(1,0);
-			refresh();
-			if((q = open_server(port)) == -1){
-				getch();
-				break;
-			}
-			clear();
-			refresh();
-			S = 1;
-			win = 0; lose = 0;
-			mystone = 10;
-			opponentstone = 11;
-			noecho();
-			print_stat();
-			return q;
+				clear();
+				echo();
+				mvaddstr(15,0,"                                        Port: ");
+				refresh();
+				getstr(temp);
+				port = atoi(temp);
+				clear();
+				if(gamecheck == 3)
+					mvaddstr(15,0,"                                        3-mok room create.            ");
+				else if(gamecheck == 4)
+					mvaddstr(15,0,"                                        4-mok room create.            ");
+				else
+					mvaddstr(15,0,"                                        5-mok room create.            ");
+				mvaddstr(16,0,"                                        wait for another player             ");
+				refresh();
+				if((q = open_server(port)) == -1){
+					getch();
+					break;
+				}
+				sendXY(gamecheck,0,q);
+				sleep(1);
+				receiveXY(&nullpoint2, &nullpoint, q);
+				if(nullpoint2 == -1){
+					clear();
+					mvaddstr(15,0,"                                        Opponent join wrong game.                 ");
+					refresh();
+					sleep(3);
+					break;
+				}
+				clear();
+				refresh();
+				S = 1;
+				win = 0; lose = 0;
+				mystone = 10;
+				opponentstone = 11;
+				noecho();
+				print_stat();
+				return q;
 		case '2':
 			clear();
 			echo();
-			mvaddstr(0,0,"IP address: ");
+			if(gamecheck == 3)
+				mvaddstr(15,0,"                                        you select 3-mok!            ");
+			else if(gamecheck == 4)
+				mvaddstr(15,0,"                                        you select 4-mok!            ");
+			else 
+				mvaddstr(15,0,"                                        you select 5-mok!            ");
+			mvaddstr(16,0,"                                        IP address: ");
 			refresh();
 			getstr(ipaddr);
-			mvaddstr(1,0,"Port: ");
+			mvaddstr(17,0,"                                        Port: ");
 			refresh();
 			getstr(temp);
 			port = atoi(temp);
 			if((q = connect_server(port, ipaddr)) == -1){
 				clear();
-				mvaddstr(0,0,"already used port or not correct ip address.");
-				mvaddstr(1,0,"please try again.");
+				mvaddstr(15,0,"                                        already used port or not correct ip address.                    ");
+				mvaddstr(16,0,"                                        please try again.                                               ");
 				refresh();
-				getch();
+				sleep(3);
 				noecho();
 				break;
 			}
+			sleep(1);
+			receiveXY(&clientgame,&nullpoint,q);
+			if(clientgame != gamecheck){
+				clear();
+				mvaddstr(15,0,"                                        game is not match.                ");
+				mvaddstr(16,0,"                                        please try again.                 ");
+				sendXY(-1,0,q);
+				refresh();
+				sleep(3);
+				break;
+			}
+			sendXY(1,0,q);
 			S = 0;
 			win = 0; lose = 0;
 			mystone=11;
@@ -1429,6 +1457,7 @@ int setSocket(){
 void start(){
 	int q=1;
 	int i, j, k;
+	int introcheck;
 	initscr();
 	keypad(stdscr, TRUE);
 	noecho();
@@ -1469,27 +1498,15 @@ void start(){
 		mvaddstr(32,0,"                                                                                                        ':::::");
 		mvaddstr(33,0,"                                                                                                            ':");
 
-
-
-
-
-
-
-
-
-
-
-
-
 		refresh();
 		i = getch();
 		switch(i){
 		case '1':
 			clear();
-			mvaddstr(20,0,"                                    1. Play Sam mok(3-mok)");
-			mvaddstr(21,0,"                                    2. Play Sa mok (4-mok)");
-			mvaddstr(22,0,"                                    3. Play O mok  (5-mok)");
-			mvaddstr(23,0,"                                         else. go back.");
+			mvaddstr(15,0,"                                        1. Play Sam mok(3-mok)             ");
+			mvaddstr(16,0,"                                        2. Play Sa mok (4-mok)             ");
+			mvaddstr(17,0,"                                        3. Play O mok  (5-mok)             ");
+			mvaddstr(18,0,"                                             else. go back.                ");
 			refresh();
 			j = getch();
 			switch(j){
@@ -1515,40 +1532,47 @@ void start(){
 
 			break;
 		case '2':
-			clear();
-			mvaddstr(20,0,"                                    1. Sammok Introduce(3-mok)           ");
-			mvaddstr(21,0,"                                    2. Samok Introduce (4-mok)           ");
-			mvaddstr(22,0,"                                    3. Omok Introduce  (5-mok)           ");
-			mvaddstr(23,0,"                                           else. go back.                ");
-			k = getch();
-			switch(k){
-			case '1' :
+			introcheck = 1;
+			while(introcheck){
 				clear();
-				mvaddstr(20,0,"                     1.If you put 3 stones in line, you win.");
-				mvaddstr(21,0,"                     2.If all the spaces are filled with stones, Draw.");
+				mvaddstr(15,0,"                                        1. Sammok Introduce(3-mok)           ");
+				mvaddstr(16,0,"                                        2. Samok Introduce (4-mok)           ");
+				mvaddstr(17,0,"                                        3. Omok Introduce  (5-mok)           ");
+				mvaddstr(18,0,"                                               else. go back.                ");
+				k = getch();
+				switch(k){
+				case '1' :
+					clear();
+					mvaddstr(15,0,"                           1.If you put 3 stones in line, you win.          ");
+					mvaddstr(16,0,"                           2.If all the spaces are filled with stones, Draw.");
 
-				mvaddstr(23,0,"                                      PRESS ANY KEY.                  ");
-				getch();
-				break;
-			case '2' :
-				clear();
-				mvaddstr(20,0,"                     1.If you put 4 stones in line, you win.");
-				mvaddstr(21,0,"                     2.Stones must piled on the stone.");
-				mvaddstr(22,0,"                     3.If all the spaces are filled with stones, Draw.");
+					mvaddstr(18,0,"                                        PRESS ANY KEY.                      ");
+					getch();
+					break;
+				case '2' :
+					clear(); 
+					mvaddstr(15,0,"                           1.If you put 4 stones in line, you win.          ");
+					mvaddstr(16,0,"                           2.Stones must piled on the stone.                ");
+					mvaddstr(17,0,"                           3.If all the spaces are filled with stones, Draw.");
 
-				mvaddstr(24,0,"                                      PRESS ANY KEY.                  ");
-				getch();
-				break;
-			case '3' :
-				clear();
-				mvaddstr(20,0,"                     1.If you put 5 stones in line, you win.");
-				mvaddstr(21,0,"                     2.first player is not allowd 33, 44");
-				mvaddstr(22,0,"                     3.second player is allowd 33, 44");
-				mvaddstr(23,0,"                     4.If all the spaces are filled with stones, Draw.");
+					mvaddstr(19,0,"                                        PRESS ANY KEY.                      ");
+					getch();
+					break;
+				case '3' :
+					clear();
+					mvaddstr(15,0,"                           1.If you put 5 stones in line, you win.");
+					mvaddstr(16,0,"                           2.first player is not allowd 33, 44");
+					mvaddstr(17,0,"                           3.second player is allowd 33, 44");
+					mvaddstr(18,0,"                           4.If all the spaces are filled with stones, Draw.");
 
-				mvaddstr(25,0,"                                      PRESS ANY KEY.                  ");
-				getch();
-				break;
+					mvaddstr(20,0,"                                        PRESS ANY KEY.                  ");
+					getch();
+					break;
+				
+				default :
+					introcheck = 0;
+					break;
+				}
 			}
 			break;
 		case '3':
