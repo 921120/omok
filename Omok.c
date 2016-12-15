@@ -8,241 +8,740 @@
 #include "server.c"
 #define TIME 350000
 
-int condition=0;
+int state=0;
 int x, y;
 int ex, ey;
 int S, port;
-int MSC, ESC;
+int mystone, opponentstone;
 int win, lose;
+char map_mirror3[3][5];
+char map_mirror4[8][17];
 char map_mirror[15][29];
+int gamecheck = 0;
+int socketcheck = 1;
+int backtomenu = 0;
 
 main(){	
 	int key, q = 1, q2 = 1, q3 = 1;
-	char temp, checkt;
+	int i, j;
+	char temp;
 	int socket;
 	pthread_t t1;
 	void *flickering(void *);
-	start();
-	socket=setSocket();
-	set_up();
-	pthread_create(&t1, NULL, flickering, NULL);
-	while(1){ //continue game
-		resetMap();
-		if(MSC == 11){
-			mvaddstr(10,30,"Opponent's turn!!                 ");
-			refresh();
-			receiveXY(&ex, &ey, socket);	
-			map_mirror[ey][ex] = ESC;
-			print(ex,ey,ESC);
-		}//receive first if stone color white
-		q = 1;
-		while(q){ //one game
-			fflush(stdin);
-			refresh();
-			q2 = 1;q3 = 1;
-			x=14;y=7;
-			clearbottom();
-			mvaddstr(10,30,"my turn!!                         ");
-			print(x,y,MSC);//set game
-			while(q2){ //put stone
-				condition=1;
-				refresh();
-				key = getch();
-				print(x,y,MSC);
-				switch(key){
-				case KEY_UP:
-					if(y-1>=0){
-						condition = 0;
-						print(x,y, map_mirror[y][x]);
-						y--;
-						print(x,y,MSC);
-						condition = 1;
-					}
+
+	while(1){
+		fflush(stdin);
+		backtomenu = 0;
+		socketcheck = 1;
+		socket = 0;
+		while(socketcheck){
+			socketcheck = 0;
+			start();
+			socket=setSocket();
+		}
+		for(i=0; i<3; i++){
+			for(j=0; j<5; j++){
+				map3[i][j] = 0;
+			}
+		}
+		for(i=0; i<8; i++){
+			for(j=0; j<17; j++){
+				map4[i][j] = 0;
+			}
+		}
+		for(i=0; i<15; i++){
+			for(j=0; j<29; j++){
+				map[i][j] = 0;
+			}
+		}
+
+		set_up();
+		pthread_create(&t1, NULL, flickering, NULL);
+		if (gamecheck == 3){
+			while(1){ //continue game
+				if(backtomenu)
 					break;
-				case KEY_DOWN:
-					if(y+1<=14){
-						condition = 0;
-						print(x,y, map_mirror[y][x]);
-						y++;
-						print(x,y,MSC);
-						condition = 1;
-					}
-					break;
-				case KEY_LEFT:
-					if(x-2>=0){
-						condition = 0;
-						print(x,y, map_mirror[y][x]);
-						x-=2;
-						print(x,y,MSC);
-						condition = 1;
-					}
-					break;
-				case KEY_RIGHT:
-					if(x+2<=29){
-						condition = 0;
-						print(x,y, map_mirror[y][x]);
-						x+=2;
-						print(x,y,MSC);
-						condition = 1;
-					}
-					break;
-				case '\n':case KEY_ENTER:
-					//my turn
-					key = put(x,y,MSC);
-					if(!key){
-						mvaddstr(15,0,"there's already stone there.              ");
-						move(y,x);
-						break;
-					}
-					if(key > 2 && key < 6){
-						printbottom(key);
-						move(y,x);
-						break;
-					} //lose
-					sendXY(x,y,socket);
-					if(key == 2){
-						mvaddstr(15,0,"You win!!                         ");
-						win++;
-						print_stat();
-						q = 0;
-					} //win
-					else if(key == 6){
-						mvaddstr(15,0,"Draw!!                          ");
-						q = 0;
-					} //draw
-					refresh();
-					if(!q){
-						mvaddstr(16,0,"Restart?(Y/N)                       ");
-						refresh();
-						while(q3){
-							key = getch();
-							switch(key){
-							case 'Y':case 'y':
-								sendXY(1,1,socket);
-								mvaddstr(15,0,"wait for Opponent's input                 ");
-								refresh();
-								receiveXY(&x,&y,socket);
-								if(x&&y){
-									temp = ESC;
-									ESC = MSC;
-									MSC = temp;
-									q3 = 0;
-								}
-								else if(S){
-									clear();
-									close(socket);
-									mvaddstr(0,0,"game over.                            ");
-									win = 0; lose = 0;
-									refresh();
-									socket = acceptt();
-									MSC = 10;
-									q3 = 0;
-								}
-								else{
-									clear();
-									mvaddstr(0,0,"game over.                       ");
-									refresh();
-									getch();
-									clear();
-									endwin();
-									close(socket);
-									pthread_join(t1, NULL);
-									exit(1);
-								}
-								break;
-							case 'N':case 'n':
-								sendXY(0,0,socket);
-								clear();
-								endwin();
-								close(socket);
-								pthread_join(t1, NULL);
-								exit(1);
-							}
-						}
-						q2 = 0;
-						break;
-					}
-					//enemy turn
-					mvaddstr(10,30,"opponent's turn   ");
-					clearbottom();
+				resetMap();
+				if(mystone == 11){
+					mvaddstr(10,30,"Opponent's turn!!                 ");
 					refresh();
 					receiveXY(&ex, &ey, socket);
-					key = put(ex,ey,ESC);
-					map_mirror[ey][ex]=ESC;
-					print(ex,ey, map_mirror[ey][ex]);
-					if(key == 6){ 
-						mvaddstr(15,0,"Draw!!                           ");
-						print_stat();
-						q = 0;
-					} //draw
-					else if(key == 2){
-						mvaddstr(15,0,"Opponent win!!                           ");
-						lose++;
-						print_stat();
-						q = 0;
-					} //win
+					map_mirror3[ey][ex] = opponentstone;
+					print(ex,ey,opponentstone);
+				}//receive first if stone color white
+				q = 1;
+				while(q){ //one game
+					fflush(stdin);
 					refresh();
-					if(!q){
-						mvaddstr(16,0,"restart?(Y/N)                     ");
+					q2 = 1;q3 = 1;
+					x=2;y=1;
+					clearbottom();
+					mvaddstr(10,30,"my turn!!                           ");
+					print(x,y,mystone);//set game
+					while(q2){ //put stone
+						state=1;
 						refresh();
-						while(q3){
-							key = getch();
-							switch(key){
-							case 'Y':case 'y':
-								sendXY(1,1,socket);
-								mvaddstr(15,0,"wait for Opponent's input                ");
-								refresh();
-								receiveXY(&x,&y,socket);
-								if(x&&y){
-									temp = ESC;
-									ESC = MSC;
-									MSC = temp;
-									q3 = 0;
-								}
-								else if(S){
-									clear();
-									close(socket);
-									mvaddstr(0,0,"reset score.                  ");
-									refresh();
-									win = 0; lose = 0;
-									socket = acceptt();
-									MSC = 10;
-									q3 = 0;
-								}
-								else{
-									mvaddstr(0,0,"game over.                     ");
-									refresh();
-									getch();
-									clear();
-									endwin();
-									close(socket);
-									exit(1);
-								}
-								break;
-							case 'N':case 'n':
-								sendXY(0,0,socket);
-								clear();
-								endwin();
-								close(socket);
-								exit(1);
+						key = getch();
+						print(x,y,mystone);
+						switch(key){
+						case KEY_UP:
+							if(y-1>=0){
+								state = 0;
+								print(x,y, map_mirror3[y][x]);
+								y--;
+								print(x,y,mystone);
+								state = 1;
 							}
+							break;
+						case KEY_DOWN:
+							if(y+1<=2){
+								state = 0;
+								print(x,y, map_mirror3[y][x]);
+								y++;
+								print(x,y,mystone);
+								state = 1;
+							}
+							break;
+						case KEY_LEFT:
+							if(x-2>=0){
+								state = 0;
+								print(x,y, map_mirror3[y][x]);
+								x-=2;
+								print(x,y,mystone);
+								state = 1;
+							}
+							break;
+						case KEY_RIGHT:
+							if(x+2<=5){
+								state = 0;
+								print(x,y, map_mirror3[y][x]);
+								x+=2;
+								print(x,y,mystone);
+								state = 1;
+							}
+							break;
+						case '\n':case KEY_ENTER:
+							//my turn
+							key = put3(x,y,mystone);
+							if(!key){
+								mvaddstr(15,0,"there's already stone there.              ");
+								move(y,x);
+								break;
+							}
+							if(key > 2 && key < 6){
+								printbottom(key);
+								move(y,x);
+								break;
+							} //lose
+							sendXY(x,y,socket);
+							if(key == 2){
+								mvaddstr(15,0,"You win!!                         ");
+								win++;
+								print_stat();
+								q = 0;
+							} //win
+							else if(key == 6){
+								mvaddstr(15,0,"Draw!!                          ");
+								q = 0;
+							} //draw
+							refresh();
+							if(!q){
+								mvaddstr(16,0,"Restart?(Y/N)                       ");
+								refresh();
+								while(q3){
+									key = getch();
+									switch(key){
+									case 'Y':case 'y':
+										sendXY(1,1,socket);
+										mvaddstr(15,0,"wait for Opponent's input                 ");
+										refresh();
+										receiveXY(&x,&y,socket);
+										if(x&&y){
+											temp = opponentstone;
+											opponentstone = mystone;
+											mystone = temp;
+											q3 = 0;
+										}
+										else if(S){
+											close(socket);
+											clear();
+											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
+											sleep(2);
+											refresh();
+											q3 = 0;
+											backtomenu = 1;
+											break;
+										}
+										else{
+											clear();
+											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
+											sleep(2);
+											refresh();
+											q3 = 0;
+											backtomenu = 1;
+											break;
+										}
+										break;
+									case 'N':case 'n':
+										sendXY(0,0,socket);
+										sleep(2);
+										if(S){
+											close(socket);
+										}
+										clear();
+										refresh();
+										q3 = 0;
+										backtomenu = 1;
+										break;
+									}
+								}
+								q2 = 0;
+							}
+							fflush(stdin);
+							//enemy turn
+							if(q2 != 0){
+							mvaddstr(10,30,"opponent's turn   ");
+							clearbottom();
+							refresh();
+							receiveXY(&ex, &ey, socket);
+							key = put3(ex,ey,opponentstone);
+							map_mirror3[ey][ex]=opponentstone;
+							print(ex,ey, map_mirror3[ey][ex]);
+							if(key == 6){ 
+								mvaddstr(15,0,"Draw!!                           ");
+								print_stat();
+								q = 0;
+							} //draw
+							else if(key == 2){
+								mvaddstr(15,0,"Opponent win!!                           ");
+								lose++;
+								print_stat();
+								q = 0;
+							} //win
+							refresh();
+							}
+							if(!q){
+								mvaddstr(16,0,"restart?(Y/N)                     ");
+								refresh();
+								while(q3){
+									key = getch();
+									switch(key){
+									case 'Y':case 'y':
+										sendXY(1,1,socket);
+										mvaddstr(15,0,"wait for Opponent's input                ");
+										refresh();
+										receiveXY(&x,&y,socket);
+										if(x&&y){
+											temp = opponentstone;
+											opponentstone = mystone;
+											mystone = temp;
+											q3 = 0;
+										}
+										else if(S){
+											close(socket);
+											clear();
+											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
+											sleep(2);
+											refresh();
+											q3 = 0;
+											backtomenu = 1;
+											break;
+										}
+										else{
+											clear();
+											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
+											sleep(2);
+											refresh();
+											q3 = 0;
+											backtomenu = 1;
+											break;
+										}
+										break;
+									case 'N':case 'n':
+										sendXY(0,0,socket);
+										sleep(2);
+										if(S)
+											close(socket);
+										clear();
+										refresh();
+										q3 = 0;
+										backtomenu = 1;
+										break;
+									}
+								}
+								q2 = 0;
+								break;
+							}
+							q2 = 0;
+							break;
 						}
-						q2 = 0;
-						break;
+						if(backtomenu)
+							break;
 					}
-					q2 = 0;
+					if(backtomenu)
+						break;
+				}
+			}
+		}
+		else if(gamecheck == 4){
+			while(1){ //continue game
+				if(backtomenu)
 					break;
+				resetMap();
+				if(mystone == 11){
+					mvaddstr(10,30,"Opponent's turn!!                 ");
+					refresh();
+					receiveXY(&ex, &ey, socket);
+					map_mirror4[ey][ex] = opponentstone;
+					print(ex,ey,opponentstone);
+				}//receive first if stone color white
+				q = 1;
+				while(q){ //one game
+					fflush(stdin);
+					refresh();
+					q2 = 1;q3 = 1;
+					x=6;y=3;
+					clearbottom();
+					mvaddstr(10,30,"my turn!!                           ");
+					print(x,y,mystone);//set game
+					while(q2){ //put stone
+						state=1;
+						refresh();
+						key = getch();
+						print(x,y,mystone);
+						switch(key){
+						case KEY_UP:
+							if(y-1>=0){
+								state = 0;
+								print(x,y, map_mirror4[y][x]);
+								y--;
+								print(x,y,mystone);
+								state = 1;
+							}
+							break;
+						case KEY_DOWN:
+							if(y+1<=7){
+								state = 0;
+								print(x,y, map_mirror4[y][x]);
+								y++;
+								print(x,y,mystone);
+								state = 1;
+							}
+							break;
+						case KEY_LEFT:
+							if(x-2>=0){
+								state = 0;
+								print(x,y, map_mirror4[y][x]);
+								x-=2;
+								print(x,y,mystone);
+								state = 1;
+							}
+							break;
+						case KEY_RIGHT:
+							if(x+2<=17){
+								state = 0;
+								print(x,y, map_mirror4[y][x]);
+								x+=2;
+								print(x,y,mystone);
+								state = 1;
+							}
+							break;
+						case '\n':case KEY_ENTER:
+							//my turn
+							key = put4(x,y,mystone);
+							if(!key){
+								mvaddstr(15,0,"You Can't put stone there.              ");
+								move(y,x);
+								break;
+							}
+							if(key > 2 && key < 6){
+								printbottom(key);
+								move(y,x);
+								break;
+							} //lose
+							sendXY(x,y,socket);
+							if(key == 2){
+								mvaddstr(15,0,"You win!!                         ");
+								win++;
+								print_stat();
+								q = 0;
+							} //win
+							else if(key == 6){
+								mvaddstr(15,0,"Draw!!                          ");
+								q = 0;
+							} //draw
+							refresh();
+							if(!q){
+								mvaddstr(16,0,"Restart?(Y/N)                       ");
+								refresh();
+								while(q3){
+									key = getch();
+									switch(key){
+									case 'Y':case 'y':
+										sendXY(1,1,socket);
+										mvaddstr(15,0,"wait for Opponent's input                 ");
+										refresh();
+										receiveXY(&x,&y,socket);
+										if(x&&y){
+											temp = opponentstone;
+											opponentstone = mystone;
+											mystone = temp;
+											q3 = 0;
+										}
+										else if(S){
+											close(socket);
+											clear();
+											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
+											sleep(2);
+											refresh();
+											q3 = 0;
+											backtomenu = 1;
+											break;
+										}
+										else{
+											clear();
+											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
+											sleep(2);
+											refresh();
+											q3 = 0;
+											backtomenu = 1;
+											break;
+										}
+										break;
+									case 'N':case 'n':
+										sendXY(0,0,socket);
+										sleep(2);
+										if(S){
+											close(socket);
+										}
+										clear();
+										refresh();
+										q3 = 0;
+										backtomenu = 1;
+										break;
+									}
+								}
+								q2 = 0;
+							}
+							fflush(stdin);
+							//enemy turn
+							if(q2 != 0){
+							mvaddstr(10,30,"opponent's turn   ");
+							clearbottom();
+							refresh();
+							receiveXY(&ex, &ey, socket);
+							key = put4(ex,ey,opponentstone);
+							map_mirror4[ey][ex]=opponentstone;
+							print(ex,ey, map_mirror4[ey][ex]);
+							if(key == 6){ 
+								mvaddstr(15,0,"Draw!!                           ");
+								print_stat();
+								q = 0;
+							} //draw
+							else if(key == 2){
+								mvaddstr(15,0,"Opponent win!!                           ");
+								lose++;
+								print_stat();
+								q = 0;
+							} //win
+							refresh();
+							}
+							if(!q){
+								mvaddstr(16,0,"restart?(Y/N)                     ");
+								refresh();
+								while(q3){
+									key = getch();
+									switch(key){
+									case 'Y':case 'y':
+										sendXY(1,1,socket);
+										mvaddstr(15,0,"wait for Opponent's input                ");
+										refresh();
+										receiveXY(&x,&y,socket);
+										if(x&&y){
+											temp = opponentstone;
+											opponentstone = mystone;
+											mystone = temp;
+											q3 = 0;
+										}
+										else if(S){
+											close(socket);
+											clear();
+											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
+											sleep(2);
+											refresh();
+											q3 = 0;
+											backtomenu = 1;
+											break;
+										}
+										else{
+											clear();
+											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
+											sleep(2);
+											refresh();
+											q3 = 0;
+											backtomenu = 1;
+											break;
+										}
+										break;
+									case 'N':case 'n':
+										sendXY(0,0,socket);
+										sleep(2);
+										if(S)
+											close(socket);
+										refresh();
+										q3 = 0;
+										backtomenu = 1;
+										break;
+									}
+								}
+								q2 = 0;
+								break;
+							}
+							q2 = 0;
+							break;
+						}
+						if(backtomenu)
+							break;
+					}
+					if(backtomenu)
+						break;
+				}
+			}
+		}
+		else if(gamecheck == 5){ // omok.
+			while(1){ //continue game
+				if(backtomenu)
+					break;
+				resetMap();
+				if(mystone == 11){
+					mvaddstr(10,30,"Opponent's turn!!                 ");
+					refresh();
+					receiveXY(&ex, &ey, socket);
+					map_mirror[ey][ex] = opponentstone;
+					print(ex,ey,opponentstone);
+				}//receive first if stone color white
+				q = 1;
+				while(q){ //one game
+					fflush(stdin);
+					refresh();
+					q2 = 1;q3 = 1;
+					x=14;y=7;
+					clearbottom();
+					mvaddstr(10,30,"my turn!!                         ");
+					print(x,y,mystone);//set game
+					while(q2){ //put stone
+						state=1;
+						refresh();
+						key = getch();
+						print(x,y,mystone);
+						switch(key){
+						case KEY_UP:
+							if(y-1>=0){
+								state = 0;
+								print(x,y, map_mirror[y][x]);
+								y--;
+								print(x,y,mystone);
+								state = 1;
+							}
+							break;
+						case KEY_DOWN:
+							if(y+1<=14){
+								state = 0;
+								print(x,y, map_mirror[y][x]);
+								y++;
+								print(x,y,mystone);
+								state = 1;
+							}
+							break;
+						case KEY_LEFT:
+							if(x-2>=0){
+								state = 0;
+								print(x,y, map_mirror[y][x]);
+								x-=2;
+								print(x,y,mystone);
+								state = 1;
+							}
+							break;
+						case KEY_RIGHT:
+							if(x+2<=29){
+								state = 0;
+								print(x,y, map_mirror[y][x]);
+								x+=2;
+								print(x,y,mystone);
+								state = 1;
+							}
+							break;
+						case '\n':case KEY_ENTER:
+							//my turn
+							key = put(x,y,mystone);
+							if(!key){
+								mvaddstr(15,0,"there's already stone there.              ");
+								move(y,x);
+								break;
+							}
+							if(key > 2 && key < 6){
+								printbottom(key);
+								move(y,x);
+								break;
+							} //lose
+							sendXY(x,y,socket);
+							if(key == 2){
+								mvaddstr(15,0,"You win!!                         ");
+								win++;
+								print_stat();
+								q = 0;
+							} //win
+							else if(key == 6){
+								mvaddstr(15,0,"Draw!!                          ");
+								q = 0;
+							} //draw
+							refresh();
+							if(!q){
+								mvaddstr(16,0,"Restart?(Y/N)                       ");
+								refresh();
+								while(q3){
+									key = getch();
+									switch(key){
+									case 'Y':case 'y':
+										sendXY(1,1,socket);
+										mvaddstr(15,0,"wait for Opponent's input                 ");
+										refresh();
+										receiveXY(&x,&y,socket);
+										if(x&&y){
+											temp = opponentstone;
+											opponentstone = mystone;
+											mystone = temp;
+											q3 = 0;
+										}
+										else if(S){
+											close(socket);
+											clear();
+											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
+											sleep(2);
+											refresh();
+											q3 = 0;
+											backtomenu = 1;
+											break;
+										}
+										else{
+											clear();
+											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
+											sleep(2);
+											refresh();
+											q3 = 0;
+											backtomenu = 1;
+											break;
+										}
+										break;
+									case 'N':case 'n':
+										sendXY(0,0,socket);
+										sleep(2);
+										if(S){
+											close(socket);
+										}
+										clear();
+										refresh();
+										q3 = 0;
+										backtomenu = 1;
+										break;
+									}
+								}
+								q2 = 0;
+							}
+							fflush(stdin);
+							//enemy turn
+							if(q2 != 0){
+							mvaddstr(10,30,"opponent's turn   ");
+							clearbottom();
+							refresh();
+							receiveXY(&ex, &ey, socket);
+							key = put(ex,ey,opponentstone);
+							map_mirror[ey][ex]=opponentstone;
+							print(ex,ey, map_mirror[ey][ex]);
+							}
+							if(key == 6){ 
+								mvaddstr(15,0,"Draw!!                           ");
+								print_stat();
+								q = 0;
+							} //draw
+							else if(key == 2){
+								mvaddstr(15,0,"Opponent win!!                           ");
+								lose++;
+								print_stat();
+								q = 0;
+							} //win
+							refresh();
+							if(!q){
+								mvaddstr(16,0,"restart?(Y/N)                     ");
+								refresh();
+								while(q3){
+									key = getch();
+									switch(key){
+									case 'Y':case 'y':
+										sendXY(1,1,socket);
+										mvaddstr(15,0,"wait for Opponent's input                 ");
+										refresh();
+										receiveXY(&x,&y,socket);
+										if(x&&y){
+											temp = opponentstone;
+											opponentstone = mystone;
+											mystone = temp;
+											q3 = 0;
+										}
+										else if(S){
+											close(socket);
+											clear();
+											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
+											sleep(2);
+											refresh();
+											q3 = 0;
+											backtomenu = 1;
+											break;
+										}
+										else{
+											clear();
+											mvaddstr(0,0,"Opponent's input is N. out from room.                  ");
+											sleep(2);
+											refresh();
+											q3 = 0;
+											backtomenu = 1;
+											break;
+										}
+										break;
+									case 'N':case 'n':
+										sendXY(0,0,socket);
+										sleep(2);
+										if(S){
+											close(socket);
+										}
+										clear();
+										refresh();
+										q3 = 0;
+										backtomenu = 1;
+										break;
+									}
+								}
+								q2 = 0;
+								break;
+							}
+							q2 = 0;
+							break;
+						}
+						if(backtomenu)
+							break;
+					}
+					if(backtomenu)
+						break;
 				}
 			}
 		}
 	}
-	endwin();
 }
 
 void printbottom(int a){
 	switch(a){
 	case 3: 
-		mvaddstr(15,0,"what's here?                                    ");
+		mvaddstr(15,0,"6 stones in line is not allowd.                ");
 		break;
 	case 4:
 		mvaddstr(15,0,"33 not allowed.                                ");
@@ -258,65 +757,137 @@ void clearbottom(){
 }
 void *flickering(void * a){
 	while(1){
-		while(condition){
-			print(x,y,MSC);
-			usleep(TIME);
-			print(x,y,map_mirror[y][x]);
-			usleep(TIME);
-			if(!condition){
-				print(x,y, map_mirror[y][x]);
+		while(state){
+			if(gamecheck == 3){
+				print(x,y,mystone);
+				usleep(TIME);
+				print(x,y,map_mirror3[y][x]);
+				usleep(TIME);
+				if(!state){
+					print(x,y, map_mirror3[y][x]);
+				}
 			}
+			else if(gamecheck == 4){
+				print(x,y,mystone);
+				usleep(TIME);
+				print(x,y,map_mirror4[y][x]);
+				usleep(TIME);
+				if(!state){
+					print(x,y, map_mirror4[y][x]);
+				}
+			}
+			else{
+				print(x,y,mystone);
+				usleep(TIME);
+				print(x,y,map_mirror[y][x]);
+				usleep(TIME);
+				if(!state){
+					print(x,y, map_mirror[y][x]);
+				}
+			}
+
 		}
 	}
 }
 void resetMap(){
 	int i,j;
 	clear();
-	for(i=0; i<15; i++)
-		for(j=0; j<29; j++)
-			map_mirror[i][j] = map[i][j];
-	for(i=0; i<15; i++){
-		for(j=0; j<29; j++){
-			move(i,j);
-			switch(map[i][j]){
-				addstr(" ");
+	if(gamecheck == 3){
+		for(i=0; i<3; i++){
+			for(j=0; j<5; j++){
+				map_mirror3[i][j] = map3[i][j];
+			}
+		}
+		for(i=0; i<3; i++){
+			for(j=0; j<5; j++){
+				move(i,j);
+				switch(map3[i][j]){
+				case 0:
+					addstr(" ");
+					break;
+				}
+			}
+		}
+	}
+	else if(gamecheck == 4){
+		for(i=0; i<8; i++){
+			for(j=0; j<17; j++){
+				map_mirror4[i][j] = map4[i][j];
+			}
+		}
+		for(i=0; i<8; i++){
+			for(j=0; j<17; j++){
+				move(i,j);
+				switch(map4[i][j]){
+				case 0:
+					addstr(" ");
+					break;
+				}
+			}
+		}
+	}
+	else{
+		for(i=0; i<15; i++){
+			for(j=0; j<29; j++){
+				map_mirror[i][j] = map[i][j];
+			}
+		}
+		for(i=0; i<15; i++){
+			for(j=0; j<29; j++){
+				move(i,j);
+				switch(map4[i][j]){
+				case 0:
+					addstr(" ");
+					break;
+				}
 			}
 		}
 	}
 	print_stat();
 }
+
 void print(int xx, int yy, char a){
-	move(yy,xx);
-	switch(a){
+	if(gamecheck == 3)
+	{
+		switch(a){
+		case 0:
+			move(yy*5 + 0, xx*5); 
+			addstr("         ");
+			move(yy*5 + 1, xx*5);
+			addstr("         ");
+			move(yy*5 + 2, xx*5);
+			addstr("         ");
+			move(yy*5 + 3, xx*5);
+			addstr("         ");
+			break;
+		case 10:
+			move(yy*5 + 0, xx*5); 
+			addstr("---------");
+			move(yy*5 + 1, xx*5);
+			addstr("|+++++++|");
+			move(yy*5 + 2, xx*5);
+			addstr("|+++++++|");
+			move(yy*5 + 3, xx*5);
+			addstr("---------");
+			break;
+		case 11:
+			move(yy*5 + 0, xx*5); 
+			addstr("---------");
+			move(yy*5 + 1, xx*5);
+			addstr("|       |");
+			move(yy*5 + 2, xx*5);
+			addstr("|       |");
+			move(yy*5 + 3, xx*5);
+			addstr("---------");
+			break;
+		}
+	}
+	else
+	{
+		move(yy,xx);
+		switch(a){
 		case 0:
 			addstr(" ");
-			break;
-		case 1:
-			addstr(" ");
-			break;
-		case 2:
-			addstr(" ");
-			break;
-		case 3:
-			addstr(" ");
-			break;
-		case 4:
-			addstr(" ");
-			break;
-		case 5:
-			addstr(" ");
-			break;
-		case 6:
-			addstr(" ");
-			break;
-		case 7:
-			addstr("l");
-			break;
-		case 8:
-			addstr("-");
-			break;
-		case 9:
-			addstr("+");
 			break;
 		case 10:
 			addstr("o");
@@ -325,11 +896,11 @@ void print(int xx, int yy, char a){
 			addstr("x");
 			break;
 		}
+	}
 	refresh();
 }
 void print_stat(){
 	int i,j,k;
-	
 	mvprintw(1,34,"my state");
 	mvprintw(2,31,"win :%2d", win);
 	mvprintw(3,31,"lose:%2d", lose);
@@ -338,7 +909,72 @@ void print_stat(){
 	mvprintw(8,31,"lose:%2d", win);
 	refresh();
 }
-int isVictory( char MSCc){
+
+int isVictory3(char mystonec){
+
+	int tx, ty;
+
+	for(tx=0; tx<5; tx+=2)
+	{
+		if(map_mirror3[0][tx] == mystonec)	
+			if(map_mirror3[1][tx] == mystonec)
+				if(map_mirror3[2][tx] == mystonec)
+					return 1;
+	}
+
+	for(ty=0; ty<3; ty++)
+	{
+		if(map_mirror3[ty][0] == mystonec)	
+			if(map_mirror3[ty][2] == mystonec)
+				if(map_mirror3[ty][4] == mystonec)
+					return 1;
+	}
+
+	if(map_mirror3[0][0] == mystonec)
+		if(map_mirror3[1][2] == mystonec)
+			if(map_mirror3[2][4] == mystonec)
+				return 1;
+
+	if(map_mirror3[0][4] == mystonec)
+		if(map_mirror3[1][2] == mystonec)
+			if(map_mirror3[2][0] == mystonec)
+				return 1;
+
+	return 0;
+}
+
+int isVictory4( char mystonec){
+	int i,j;
+
+	for(j=0;j<8;j++) // ㅡ 모양의 4목
+	{
+		for(i=0;i<11;i++)
+			if(map_mirror4[j][i] == mystonec && map_mirror4[j][i+2] == mystonec && map_mirror4[j][i+4] == mystonec && map_mirror4[j][i+6] == mystonec)
+				return 1;
+	}
+	for(i=0;i<17;i++) // ㅣ모양 4목
+	{
+		for(j=0;j<5;j++)
+			if(map_mirror4[j][i] == mystonec && map_mirror4[j+1][i] == mystonec && map_mirror4[j+2][i] == mystonec && map_mirror4[j+3][i] == mystonec)
+				return 1;
+	}
+	for(i=0;i<11;i++) // \모양 4목
+	{
+		for(j=0;j<5;j++)
+			if(map_mirror4[j][i] == mystonec && map_mirror4[j+1][i+2] == mystonec && map_mirror4[j+2][i+4] == mystonec && map_mirror4[j+3][i+6] == mystonec)
+				return 1;
+	}
+	for(i=6;i<17;i++) // /모양 4목
+	{
+		for(j=0;j<5;j++)
+			if(map_mirror4[j][i] == mystonec && map_mirror4[j+1][i-2] == mystonec && map_mirror4[j+2][i-4] == mystonec && map_mirror4[j+3][i-6] == mystonec)
+				return 1;
+	}
+
+	return 0;
+}
+
+int isVictory( char mystonec ){
 	int dx[] ={1, 0, 1,-1};
 	int dy[] = {0, 1, 1,1};
 	int i,x1,y1,d;
@@ -353,7 +989,7 @@ int isVictory( char MSCc){
 				for(i=0 ; i<5; i++){
 					tx = x1 + dx[d] * i*2;
 					ty =  y1 + dy[d] * i;
-					if(  map_mirror[ty][tx] != MSCc ) 
+					if(  map_mirror[ty][tx] != mystonec ) 
 						break;
 					if( ty>15||tx>31) 
 						break;
@@ -365,7 +1001,7 @@ int isVictory( char MSCc){
 	}
 	return 0;
 }
-int six(int xx, int yy, char MSCc) {
+int six(int xx, int yy, char mystonec) {
 	int dx[] = { 1, 0, 1,-1 };
 	int dy[] = { 0, 1, 1,1 };
 	int i, x, y, d;
@@ -374,16 +1010,16 @@ int six(int xx, int yy, char MSCc) {
 	int temp;
 	const int NOD = 4;
 	temp = map_mirror[yy][xx];
-	map_mirror[yy][xx] = MSCc;
+	map_mirror[yy][xx] = mystonec;
 
-	if (MSCc == 10) {
+	if (mystonec == 10) {
 		for (d = 0; d < NOD; d++) {
 			for (x = 0; x < 29; x += 2) {
 				for (y = 0; y < 15; y++) {
 					for (i = 0; i < 10; i++) {
 						tx = x + dx[d] * i * 2;
 						ty = y + dy[d] * i;
-						if (map_mirror[ty][tx] != MSCc)
+						if (map_mirror[ty][tx] != mystonec)
 							break;
 						if (ty > 14 || tx > 29)
 							break;
@@ -399,7 +1035,7 @@ int six(int xx, int yy, char MSCc) {
 	map_mirror[yy][xx] = temp;
 	return 0;
 }
-int threethree(int xx, int yy, char MSCc)
+int threethree(int xx, int yy, char mystonec)
 {
 	int t, c, i, j, k, three, four, cc;
 	char tempMap;
@@ -477,16 +1113,16 @@ int threethree(int xx, int yy, char MSCc)
 					tempMap = map_mirror[yy + i][xx];
 				}
 				else if (k == 5){ 					if (yy + i > 14 || xx - i * 2 < 0){
-						i--;
-						if (map_mirror[yy + i][xx - i * 2] != 10 && map_mirror[yy + i][xx - i * 2] != 11){
-							i++;
-							break;
-						}
+					i--;
+					if (map_mirror[yy + i][xx - i * 2] != 10 && map_mirror[yy + i][xx - i * 2] != 11){
 						i++;
-						cc++;
 						break;
 					}
-					tempMap = map_mirror[yy + i][xx - i * 2];
+					i++;
+					cc++;
+					break;
+				}
+				tempMap = map_mirror[yy + i][xx - i * 2];
 				}
 				else if (k == 6){
 					if (xx - i * 2 < 0){
@@ -502,7 +1138,7 @@ int threethree(int xx, int yy, char MSCc)
 					tempMap = map_mirror[yy][xx - i * 2];
 				}
 				else if (k == 7){ 
-			if (yy - i < 0 || xx - i * 2 < 0){
+					if (yy - i < 0 || xx - i * 2 < 0){
 						i--;
 						if (map_mirror[yy - i][xx - i * 2] != 10 && map_mirror[yy - i][xx - i * 2] != 11){
 							i++;
@@ -515,7 +1151,7 @@ int threethree(int xx, int yy, char MSCc)
 					tempMap = map_mirror[yy - i][xx - i * 2];
 				}
 
-				if (MSCc == tempMap){
+				if (mystonec == tempMap){
 					t++;
 				}
 				else if (tempMap == 10 || tempMap == 11){
@@ -551,33 +1187,122 @@ int threethree(int xx, int yy, char MSCc)
 
 	return 0;
 }
-int isDraw() {
+
+
+int isDraw3() {
 	int  x1, y1;
-	for (x1 = 0; x1 < 29; x1 += 2) {
-		for (y1 = 0; y1 < 15; y1++) {
-			if (map_mirror[y1][x1] == 10 || map_mirror[y1][x1] == 11)
-				return 0;
+	for (x1 = 0; x1 < 5; x1 += 2) {
+		for (y1 = 0; y1 < 3; y1++) {
+			if (map_mirror3[y1][x1] == 10 || map_mirror3[y1][x1] == 11);
+			else return 0;
 		}
 	}
 	return 1; //draw.
 }
-int put(int xx,int yy,char MSCc){
+
+int isDraw4() {
+	int  x1, y1;
+	for (x1 = 0; x1 < 17; x1 += 2) {
+		for (y1 = 0; y1 < 8; y1++) {
+			if (map_mirror4[y1][x1] == 10 || map_mirror4[y1][x1] == 11);
+			else	return 0;
+		}
+	}
+	return 1; //draw.
+}
+
+int isDraw() {
+	int  x1, y1;
+	for (x1 = 0; x1 < 29; x1 += 2) {
+		for (y1 = 0; y1 < 15; y1++) {
+			if (map_mirror[y1][x1] == 10 || map_mirror[y1][x1] == 11);
+			else	return 0;
+		}
+	}
+	return 1; //draw.
+}
+
+
+
+int put3(int xx,int yy,char mystonec){
+	int End, i, j;
+	char temp;
+	if( map_mirror3[yy][xx]==10 || map_mirror3[yy][xx] == 11)	//stone exist at xy
+		return 0;
+
+	map_mirror3[yy][xx] = mystonec;
+	state = 0;
+	print(xx,yy, map_mirror3[yy][xx]);
+
+	End = isVictory3(mystonec);
+	if(End)
+		return 2; //victory or lose
+
+	End = isDraw3();
+	if (End)
+		return 6; //draw
+
+	return 1; //continue game
+}
+
+int put4(int xx,int yy,char mystonec){
+	int End, i,j;
+	char temp;
+
+	if(map_mirror4[yy][xx] == 10 || map_mirror4[yy][xx] == 11) //돌이 현 위치에 있음.
+		return 0;
+
+	if((yy+1) < 8){ 
+		if(map_mirror4[yy+1][xx] == 10 || map_mirror4[yy+1][xx] == 11){ //바닥이 아닐때 돌을 두는 경우 -> 
+			map_mirror4[yy][xx] = mystonec;
+		//	temp = map_mirror4[yy][xx];
+		}
+		else
+			return 0;
+		//}
+	}
+	if((yy+1) == 8){
+		if(map_mirror4[yy][xx] != 10 || map_mirror4[yy][xx] != 11){ // 제일 바닥에 돌을 두는 경우
+		//if (mystonec == 10){
+		//temp = map_mirror4[yy][xx];
+		map_mirror4[yy][xx] = mystonec;
+		}
+		else 
+			return 0;
+		//}
+	}
+
+	//map_mirror4[yy][xx] = mystonec;
+	state = 0;
+	print(xx, yy, map_mirror4[yy][xx]);
+	End = isVictory4(mystonec);
+	if(End) //win
+		return 2;
+
+	End = isDraw4();
+	if (End)
+		return 6;
+
+	return 1; //continue game
+}
+
+int put(int xx,int yy,char mystonec){
 	int End, ban, i, j;
 	char temp;
 	if( map_mirror[yy][xx]==10 || map_mirror[yy][xx] == 11)	//stone exist at xy
 		return 0;
 
-	ban=six(xx,yy,MSCc);
+	ban=six(xx,yy,mystonec);
 	if(ban)
 		return 3; //if black, lose
 
-	if (MSCc == 10){
+	if (mystonec == 10){
 		temp = map_mirror[yy][xx];
-		map_mirror[yy][xx] = MSCc;
+		map_mirror[yy][xx] = mystonec;
 		for (i = 0; i < 29; i = i + 2){
 			for (j = 0; j < 15; j++){
-				if (MSCc == map_mirror[j][i]){
-					ban = threethree(i, j, MSCc);
+				if (mystonec == map_mirror[j][i]){
+					ban = threethree(i, j, mystonec);
 					if (ban == 1){
 						map_mirror[yy][xx] = temp;
 						return 4;//33 rule
@@ -591,11 +1316,10 @@ int put(int xx,int yy,char MSCc){
 		}
 	}
 
-	map_mirror[yy][xx] = MSCc;
-	//pthread_mutex_lock(&Locker);
-	condition = 0;
+	map_mirror[yy][xx] = mystonec;
+	state = 0;
 	print(xx,yy, map_mirror[yy][xx]);
-	End = isVictory(MSCc);
+	End = isVictory(mystonec);
 
 	if(End)
 		return 2; //victory or lose
@@ -605,23 +1329,24 @@ int put(int xx,int yy,char MSCc){
 
 	return 1; //continue game
 }
+
 void set_up(){
-	int i,j,k;
 	clear();
 	noecho();
-	start_color();
-	
+
 	resetMap();
 	refresh();
 }
+
 int setSocket(){
-	int q=1, i;
+	int q=1, i, j;
 	char ipaddr[20];
 	char temp[10];
 	while(1){
 		clear();
 		mvaddstr(0,0,"1. create room");
 		mvaddstr(1,0,"2. join room");
+		mvaddstr(2,0,"3. go back");
 		i = getch();
 		switch(i){
 		case '1':
@@ -633,16 +1358,18 @@ int setSocket(){
 			port = atoi(temp);
 			clear();
 			mvaddstr(0,0,"wait for another player");
+			move(1,0);
 			refresh();
 			if((q = open_server(port)) == -1){
-				mvaddstr(1,0,"already using port");
+				getch();
+				break;
 			}
 			clear();
-			set_up();
 			refresh();
 			S = 1;
-			MSC = 10;
-			ESC = 11;
+			win = 0; lose = 0;
+			mystone = 10;
+			opponentstone = 11;
 			noecho();
 			print_stat();
 			return q;
@@ -666,46 +1393,149 @@ int setSocket(){
 				break;
 			}
 			S = 0;
-			MSC=11;
-			ESC=10;
-			set_up();
+			win = 0; lose = 0;
+			mystone=11;
+			opponentstone=10;
 			noecho();
+			return q;
+		case '3':
+			clear();
+			echo();
+			q=3;
+			socketcheck = 1;
 			return q;
 		}
 	}
 }
+
 void start(){
 	int q=1;
-	int i;
+	int i, j, k;
 	initscr();
 	keypad(stdscr, TRUE);
 	noecho();
-
 	while(q){
 		clear();
-		mvaddstr(4,39,"this is omok game.");
-		mvaddstr(12,35,"1. game start");
-		mvaddstr(13,35,"2. game introduce");
-		mvaddstr(14,35,"3. game exit");
+		mvaddstr( 0,0,"         ::::::::::            ::::::::::::::::::::::    :::::::::::::   ::::  ::::      :::::::::       :::::");
+		mvaddstr( 1,0,"       .::::::::::::.          ::::::::::::::::::::::    :::::::::::::   ::::  ::::    .:::::::::::      :::::");
+		mvaddstr( 2,0,"      .::::::::::::::.         ::::::::::::::::::::::    '::::::::::::   ::::  ::::   .:::::::::::::     :::::");
+		mvaddstr( 3,0,"      ::::::::::::::::.        :::::            :::::            :::::   ::::  ::::   ::::::'':::::::    :::::");
+		mvaddstr( 4,0,"     ::::::'    '::::::        :::::            :::::            :::::   ::::  ::::  :::::'     :::::.   :::::");
+		mvaddstr( 5,0,"     :::::        ::::::       :::::           .:::::            :::::...::::  ::::  :::::       :::::   :::::");
+		mvaddstr( 6,0,"    :::::'         :::::       :::::.::::::::::::::::            ::::::::::::  ::::  :::::       .::::   :::::");
+		mvaddstr( 7,0,"    :::::          :::::       ::::::::::::::::::::::            ::::::::::::  ::::  :::::       .::::   :::::");
+		mvaddstr( 8,0,"    :::::          .::::       :::::::::::::::::::''             ::::::::::::  ::::  :::::       .::::   :::::");
+		mvaddstr( 9,0,"    ::::.          :::::       ::::::::::::'''                   :::::   ::::  ::::  '::::       :::::   :::::");
+		mvaddstr(10,0,"    :::::          :::::                ::::.....::::::          :::::   ::::  ::::   :::::.    :::::'   :::::");
+		mvaddstr(11,0,"    :::::         .:::::            ....:::::::::::::::          :::::   ::::  ::::   '::::::::::::::    :::::");
+		mvaddstr(12,0,"    ::::::       .:::::'      .::::::::::::::::::::::''          :::::   ::::  ::::    '::::::::::::'    :::::");
+		mvaddstr(13,0,"    '::::::     ::::::'       ::::::::::::::::'''                :::::   ::::  ::::     ':::::::::::     :::::");
+		mvaddstr(14,0,"    ':::::::::::::::::        ::::::::'''         ...            :::::   ::::  ::::       ':::::::'      :::::");
+		mvaddstr(15,0,"     ':::::::::::::::         :'''         ..::::::::             ''''   ::::  ::::         :::::        :::::");
+		mvaddstr(16,0,"      ':::::::::::::                ..:::::::::::::::                    ::::  ::::                      :::::");
+		mvaddstr(17,0,"       '::::::::::             .:::::::::::::::::::::                    ::::  ::::       ....           '':::");
+		mvaddstr(18,0,"         '::::::.              .:::::::::::''   :::::                    ::::  ::::       :::::::::...        ");
+		mvaddstr(19,0,"            ::::.              .::::::''        :::::                    ::::  ::::       :::::::::::::::::.. ");
+		mvaddstr(20,0,"           .::::.              .''              :::::                    ::::  ::::       ::::::::::::::::::::");
+		mvaddstr(21,0,"           .::::.                               :::::                    ::::  ::::       ::::::::::::::::::::");
+		mvaddstr(22,0,"           .::::.                               ::''                     ::::  ::::       :::::    '':::::::::");
+		mvaddstr(23,0,"           .::::.     ....:                                              ::::  ::::       :::::          :::::");
+		mvaddstr(24,0,"           .::::..:::::::::                                              ::::  ::::       :::::          :::::");
+		mvaddstr(25,0,"          .::::::::::::::::                                               '''  ::::       :::::          :::::");
+		mvaddstr(26,0,"    ..::::::::::::::::::::'                                                     '''       :::::.         :::::");
+		mvaddstr(27,0," .:::::::::::::::::::''                                                                   :::::::::..    :::::");
+		mvaddstr(28,0," ::::::::::::::::'                                                                        ::::::::::::::::::::");
+		mvaddstr(29,0," :::::::::::'                                   1. game start                              '::::::::::::::::::");
+		mvaddstr(30,0," ::::::'                                        2. game introduce                             ''::::::::::::::");
+		mvaddstr(31,0," ''                                             3. game exit                                      ''':::::::::");
+		mvaddstr(32,0,"                                                                                                        ':::::");
+		mvaddstr(33,0,"                                                                                                            ':");
+
+
+
+
+
+
+
+
+
+
+
+
+
 		refresh();
 		i = getch();
 		switch(i){
 		case '1':
-			q = 0;
+			clear();
+			mvaddstr(20,0,"                                    1. Play Sam mok(3-mok)");
+			mvaddstr(21,0,"                                    2. Play Sa mok (4-mok)");
+			mvaddstr(22,0,"                                    3. Play O mok  (5-mok)");
+			mvaddstr(23,0,"                                         else. go back.");
 			refresh();
+			j = getch();
+			switch(j){
+			case '1' :
+				clear();
+				gamecheck = 3;
+				q = 0;
+				break;
+			case '2' :
+				clear();
+				gamecheck = 4;
+				q = 0;
+				break;
+			case '3' :
+				clear();
+				gamecheck = 5;
+				q = 0;
+				break;
+			default :
+				q = 1;
+				break;
+			}
+
 			break;
 		case '2':
 			clear();
-			move(0,0);
-			printw("1.If you put 5 stones in line, you win.\n");
-			printw("2.first player is not allowd 33, 44\n");
-			printw("3.second player is allowd 33, 44\n");
-			getch();
-			break;		
+			mvaddstr(20,0,"                                    1. Sammok Introduce           ");
+			mvaddstr(21,0,"                                    2. Samok Introduce            ");
+			mvaddstr(22,0,"                                    3. Omok Introduce             ");
+			mvaddstr(23,0,"                                    else. go back.                ");
+			k = getch();
+			switch(k){
+			case '1' :
+				clear();
+				mvaddstr(20,0,"                     1.If you put 3 stones in line, you win.");
+				mvaddstr(21,0,"                     2.If all the spaces are filled with stones, Draw.");
+
+				mvaddstr(23,0,"                                      PRESS ANY KEY.                  ");
+				getch();
+				break;
+			case '2' :
+				clear();
+				mvaddstr(20,0,"                     1.If you put 4 stones in line, you win.");
+				mvaddstr(21,0,"                     2.Stones must piled on the stone.");
+				mvaddstr(22,0,"                     3.If all the spaces are filled with stones, Draw.");
+
+				mvaddstr(25,0,"                                      PRESS ANY KEY.                  ");
+				getch();
+				break;
+			case '3' :
+				clear();
+				mvaddstr(20,0,"                     1.If you put 5 stones in line, you win.");
+				mvaddstr(21,0,"                     2.first player is not allowd 33, 44");
+				mvaddstr(22,0,"                     3.second player is allowd 33, 44");
+				mvaddstr(23,0,"                     4.If all the spaces are filled with stones, Draw.");
+
+				mvaddstr(25,0,"                                      PRESS ANY KEY.                  ");
+				getch();
+				break;
+			}
+			break;
 		case '3':
 			endwin();
 			exit(1);
 		}
 	}
 }
-
